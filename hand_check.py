@@ -1,5 +1,5 @@
-# Compares arrival times written down by hand at a stop against the labels
-# check_feed.py built from the feed for the same period.
+# Compares arrival times written down at a stop with the labels check_feed.py
+# built for the same period.
 #
 # usage: uv run python hand_check.py --obs data/handcheck/observed.csv \
 #            --labels results/handcheck/labels.csv --stop 5324 --gtfs data/static/gtfs
@@ -21,7 +21,7 @@ def read_csv(path):
 
 
 def match(observed, labels):
-    # Greedy, closest first, each label used once. Small n, so O(n*m) is fine.
+    # greedy, closest pairs first, each label used once
     pairs = []
     for o in observed:
         for lab in labels:

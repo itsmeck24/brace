@@ -1,7 +1,4 @@
-# Feed check: reads what collect.py saved and answers three questions.
-#   1. Is the feed fresh and reliably reachable?
-#   2. Which fields are actually filled in?
-#   3. Can we get arrival times we trust, and how wide is the uncertainty?
+# Reads what collect.py saved: feed freshness, field coverage, arrival labels.
 #
 # usage: uv run python check_feed.py --raw data/raw --gtfs data/static/gtfs --out results/feed_check
 
@@ -91,8 +88,7 @@ def check_fetches(raw):
 
 
 def read_vehicles(raw):
-    # one row per (vehicle, vehicle timestamp); the same report shows up in
-    # several polls if the vehicle has not sent anything new
+    # dedupe on (vehicle, timestamp), a report repeats across polls until the bus sends a new one
     seen = {}
     total = 0
     fields = Counter()
@@ -165,12 +161,8 @@ def read_trip_updates(raw):
 
 
 def build_labels(rows, stops, trip_ids):
-    # For each vehicle on a trip, walk its reports in time order and bracket the
-    # moment it reached each stop.
-    #   observed: a report says STOPPED_AT this stop. Arrival is in (previous report, this report].
-    #   inferred_seq: no STOPPED_AT, but the stop sequence jumped past this stop
-    #                 between two reports. Arrival is in (before, after].
-    # GPS distance to the stop is recorded as a cross-check, not used to set the time.
+    # Bracket when each bus reached each stop using consecutive reports.
+    # observed = it said STOPPED_AT, inferred_seq = the stop counter moved past the stop.
     by_trip = defaultdict(list)
     for r in rows:
         if r["trip"] and r["seq"] is not None:
@@ -183,23 +175,19 @@ def build_labels(rows, stops, trip_ids):
         rs.sort(key=lambda r: r["ts"])
         done = set()
         for prev, cur in zip(rs, rs[1:]):
-            # The counter sometimes leaps (1 -> 110 in 30 s). Those brackets put
-            # dozens of stops in one window and all of them fail the GPS check.
+            # counter sometimes leaps (1 -> 110 in 30 s), skip those
             if cur["seq"] - prev["seq"] > MAX_JUMP:
                 skipped_jumps += 1
                 continue
-            # counter moved but the GPS position is byte-for-byte the same: the
-            # position is stale, so we can't say the bus was anywhere near the stop
+            # counter moved but the GPS didn't budge, so the position is stale
             if cur["seq"] > prev["seq"] and (prev["lat"], prev["lon"]) == (cur["lat"], cur["lon"]):
                 skipped_frozen += 1
                 continue
-            # bus reached cur["seq"] (stopped there) or moved past one or more stops
             if cur["status"] == "STOPPED_AT" and cur["seq"] not in done:
                 was_there = prev["seq"] == cur["seq"] and prev["status"] == "STOPPED_AT"
                 if not was_there:
                     labels.append(make_label(trip, veh, cur["seq"], cur["stop"], prev, cur, "observed", stops))
                     done.add(cur["seq"])
-            # stops strictly passed between the two reports
             hi = cur["seq"] if cur["status"] == "STOPPED_AT" else cur["seq"] - 1
             lo = prev["seq"] if prev["status"] != "STOPPED_AT" else prev["seq"] + 1
             for s in range(lo, hi + 1):
@@ -253,9 +241,7 @@ def attach_stop_ids(labels, sched, stops):
             s = stops[lab["stop"]]
             lab["dist_at_lo_m"] = round(meters(*s, *pos_lo))
             lab["dist_at_hi_m"] = round(meters(*s, *pos_hi))
-            # If the bus really passed the stop between the two reports, the stop
-            # should sit near the straight line joining them. Far off the line means
-            # the sequence counter moved while the bus wasn't at the stop.
+            # if the bus really passed the stop, it should be near the line between the two reports
             lab["seg_dist_m"] = round(seg_dist(s, pos_lo, pos_hi))
 
 
@@ -273,8 +259,7 @@ def seg_dist(p, a, b):
 
 
 def prediction_preview(labels, preds):
-    # Not a result about prediction quality: one hour, one afternoon. It only
-    # shows whether label width is small next to the errors we'd measure.
+    # only to compare label width with error size, not an eval of the predictions
     errs = []
     for lab in labels:
         p = preds.get((lab["trip"], lab["seq"]))
@@ -334,8 +319,7 @@ def main():
         ts.sort()
         report_gaps += [b - a for a, b in zip(ts, ts[1:])]
 
-    # new report, same exact position, but the stop counter moved: the counter
-    # isn't coming from where the bus actually is
+    # counter moved but the position is identical
     frozen = 0
     pairs = 0
     by_veh_rows = defaultdict(list)

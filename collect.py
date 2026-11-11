@@ -1,8 +1,6 @@
-# Pulls the Valley Metro GTFS-realtime feeds on a fixed interval and saves each
-# response as-is (gzipped protobuf) plus one log line per fetch.
-#
-# This is the feed-check version: no database, nothing parsed except the header
-# timestamp, so a parse bug can never cost us raw data.
+# Polls the Valley Metro realtime feeds and saves every response as gzipped
+# protobuf, plus one log line per fetch. Only the header gets parsed, so raw
+# data is kept even if parsing breaks later.
 #
 # usage: VM_API_KEY=... uv run python collect.py --minutes 60 --every 30
 

@@ -1,6 +1,3 @@
-# Label logic on hand-made vehicle reports. No network, no mocks: these call the
-# real functions with small inputs.
-
 from check_feed import build_labels, seg_dist
 
 
