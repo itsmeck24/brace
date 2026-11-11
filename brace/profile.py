@@ -1,6 +1,6 @@
 # Per-day data quality profile of an events folder.
 #
-# usage: uv run python -m brace.profile --events data/events/ch_vbz --out results/data_profile.json
+# usage: uv run python -m brace.profile --events data/events/ch_vbz --out results/data_profile_ch_vbz.json --source "..."
 
 import argparse
 import json
@@ -49,6 +49,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--events", required=True)
     ap.add_argument("--out", required=True)
+    ap.add_argument("--source", required=True, help="where the events came from, saved with the profile")
     args = ap.parse_args()
 
     files = str(Path(args.events) / "*.parquet")
@@ -70,7 +71,7 @@ def main():
     out = {
         "run": run_info(),
         "events": args.events,
-        "source": "opentransportdata.swiss Ist-Daten v2, filtered to one operator's buses",
+        "source": args.source,
         "days": list(days.values()),
     }
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
