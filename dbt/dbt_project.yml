@@ -1,0 +1,14 @@
+name: brace
+version: "1.0.0"
+profile: brace
+model-paths: ["models"]
+test-paths: ["tests"]
+
+vars:
+  events_glob: "data/events/*/*.parquet"
+  # minutes before scheduled departure when the rider decides
+  horizons_min: [5, 10, 20]
+
+models:
+  brace:
+    +materialized: table

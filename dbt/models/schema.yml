@@ -1,0 +1,28 @@
+version: 2
+
+models:
+  - name: stop_events_clean
+    columns:
+      - name: agency
+        tests: [not_null]
+      - name: service_date
+        tests: [not_null]
+      - name: trip_id
+        tests: [not_null]
+      - name: stop_seq
+        tests: [not_null]
+      - name: dep_status
+        tests:
+          - accepted_values:
+              arguments:
+                values: ["REAL", "PROGNOSE", "GESCHAETZT", "UNBEKANNT"]
+  - name: training_rows
+    columns:
+      - name: target_delay_s
+        tests: [not_null]
+      - name: horizon_min
+        tests:
+          - accepted_values:
+              arguments:
+                values: [5, 10, 20]
+                quote: false

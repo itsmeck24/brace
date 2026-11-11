@@ -1,0 +1,7 @@
+brace:
+  target: local
+  outputs:
+    local:
+      type: duckdb
+      path: "{{ env_var('BRACE_DB', 'data/brace.duckdb') }}"
+      threads: 4
