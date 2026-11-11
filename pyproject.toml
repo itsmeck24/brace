@@ -1,9 +1,11 @@
 [project]
-name = "valley-eta"
+name = "brace"
 version = "0.1.0"
 requires-python = ">=3.13"
 dependencies = [
+    "duckdb>=2.0.0",
     "gtfs-realtime-bindings>=3.0.0",
+    "pyarrow>=26.0.1",
     "requests>=2.34.2",
 ]
 
