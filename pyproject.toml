@@ -1,0 +1,16 @@
+[project]
+name = "valley-eta"
+version = "0.1.0"
+requires-python = ">=3.13"
+dependencies = [
+    "gtfs-realtime-bindings>=3.0.0",
+    "requests>=2.34.2",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.2.0",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
