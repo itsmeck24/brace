@@ -178,6 +178,7 @@ def build_labels(rows, stops, trip_ids):
 
     labels = []
     skipped_jumps = 0
+    skipped_frozen = 0
     for (trip, veh), rs in by_trip.items():
         rs.sort(key=lambda r: r["ts"])
         done = set()
@@ -186,6 +187,11 @@ def build_labels(rows, stops, trip_ids):
             # dozens of stops in one window and all of them fail the GPS check.
             if cur["seq"] - prev["seq"] > MAX_JUMP:
                 skipped_jumps += 1
+                continue
+            # counter moved but the GPS position is byte-for-byte the same: the
+            # position is stale, so we can't say the bus was anywhere near the stop
+            if cur["seq"] > prev["seq"] and (prev["lat"], prev["lon"]) == (cur["lat"], cur["lon"]):
+                skipped_frozen += 1
                 continue
             # bus reached cur["seq"] (stopped there) or moved past one or more stops
             if cur["status"] == "STOPPED_AT" and cur["seq"] not in done:
@@ -206,7 +212,7 @@ def build_labels(rows, stops, trip_ids):
                 done.add(s)
     for lab in labels:
         lab["trip_in_static"] = lab["trip"] in trip_ids
-    return labels, skipped_jumps
+    return labels, {"jump": skipped_jumps, "frozen_position": skipped_frozen}
 
 
 def make_label(trip, veh, seq, stop_id, prev, cur, kind, stops):
@@ -327,9 +333,25 @@ def main():
     for ts in by_veh.values():
         ts.sort()
         report_gaps += [b - a for a, b in zip(ts, ts[1:])]
+
+    # new report, same exact position, but the stop counter moved: the counter
+    # isn't coming from where the bus actually is
+    frozen = 0
+    pairs = 0
+    by_veh_rows = defaultdict(list)
+    for r in rows:
+        by_veh_rows[r["vehicle"]].append(r)
+    for rs in by_veh_rows.values():
+        rs.sort(key=lambda r: r["ts"])
+        for a, b in zip(rs, rs[1:]):
+            if a["seq"] is None or b["seq"] is None or a["trip"] != b["trip"]:
+                continue
+            pairs += 1
+            if (a["lat"], a["lon"]) == (b["lat"], b["lon"]) and b["seq"] > a["seq"]:
+                frozen += 1
     v_age = [r["fetched"] - r["ts"] for r in rows]
 
-    labels, skipped_jumps = build_labels(rows, stops, trip_ids)
+    labels, skipped = build_labels(rows, stops, trip_ids)
     sched = read_stop_times(gtfs / "stop_times.txt", {r["trip"] for r in rows if r["trip"]})
     attach_stop_ids(labels, sched, stops)
     mismatches = sum(1 for lab in labels if lab.get("stop_mismatch"))
@@ -349,7 +371,8 @@ def main():
         }
     obs_dist = [lab["dist_at_hi_m"] for lab in by_kind.get("observed", []) if "dist_at_hi_m" in lab]
     label_summary["rt_stop_id_differs_from_schedule"] = mismatches
-    label_summary[f"brackets_skipped_jump_over_{MAX_JUMP}"] = skipped_jumps
+    label_summary[f"brackets_skipped_jump_over_{MAX_JUMP}"] = skipped["jump"]
+    label_summary["brackets_skipped_frozen_position"] = skipped["frozen_position"]
     label_summary["observed_gps_check"] = {
         "dist_to_stop_m": summary(obs_dist),
         "share_within_50m": round(sum(d <= NEAR_M for d in obs_dist) / len(obs_dist), 3) if obs_dist else None,
@@ -372,6 +395,8 @@ def main():
             "report_gap_s": summary(report_gaps),
             "report_age_at_fetch_s": summary(v_age),
             "rt_trips_found_in_static": round(len(rt_trips & trip_ids) / len(rt_trips), 3) if rt_trips else None,
+            "consecutive_report_pairs": pairs,
+            "pairs_seq_moved_position_frozen": frozen,
         },
         "trip_updates": {
             "trip_updates": tu_total,

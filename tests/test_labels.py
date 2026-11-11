@@ -27,19 +27,26 @@ def test_staying_stopped_does_not_relabel():
 
 def test_passing_stops_without_stopping():
     # was heading to 5, now heading to 7: it passed 5 and 6 in between
-    got, _ = run([rep(100, 5, "INCOMING_AT"), rep(140, 7, "IN_TRANSIT_TO")])
+    got, _ = run([rep(100, 5, "INCOMING_AT"), rep(140, 7, "IN_TRANSIT_TO", lat=33.405)])
     assert got == {(5, "inferred_seq"): (100, 140), (6, "inferred_seq"): (100, 140)}
 
 
 def test_leaving_a_stop_it_was_stopped_at_is_not_a_new_arrival():
-    got, _ = run([rep(100, 5, "INCOMING_AT"), rep(130, 5, "STOPPED_AT"), rep(160, 6, "IN_TRANSIT_TO")])
+    got, _ = run([rep(100, 5, "INCOMING_AT"), rep(130, 5, "STOPPED_AT"), rep(160, 6, "IN_TRANSIT_TO", lat=33.401)])
     assert list(got) == [(5, "observed")]
 
 
 def test_big_jump_is_skipped():
-    got, skipped = run([rep(100, 1, "INCOMING_AT"), rep(130, 110, "IN_TRANSIT_TO")])
+    got, skipped = run([rep(100, 1, "INCOMING_AT"), rep(130, 110, "IN_TRANSIT_TO", lat=33.41)])
     assert got == {}
-    assert skipped == 1
+    assert skipped["jump"] == 1
+
+
+def test_counter_moving_with_frozen_position_is_skipped():
+    # same lat/lon in both reports but the counter says it passed stop 5
+    got, skipped = run([rep(100, 5, "INCOMING_AT"), rep(130, 6, "IN_TRANSIT_TO")])
+    assert got == {}
+    assert skipped["frozen_position"] == 1
 
 
 def test_reports_out_of_order_are_sorted():
