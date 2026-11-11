@@ -5,6 +5,7 @@ import subprocess
 import sys
 from datetime import datetime, timezone
 from importlib.metadata import version
+from pathlib import Path
 
 
 def run_info(packages=("duckdb", "scikit-learn", "numpy")):
@@ -18,8 +19,11 @@ def run_info(packages=("duckdb", "scikit-learn", "numpy")):
             vers[p] = version(p)
         except Exception:
             pass
+    # module form keeps the user's home folder out of saved results
+    script = Path(sys.argv[0])
+    cmd = f"python -m brace.{script.stem}" if script.parent.name == "brace" else f"python {script.name}"
     return {
-        "command": "python " + " ".join(sys.argv),
+        "command": " ".join([cmd, *sys.argv[1:]]),
         "commit": (git("rev-parse", "--short", "HEAD") or "none") + (" (uncommitted changes)" if dirty else ""),
         "ran_at_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "python": platform.python_version(),

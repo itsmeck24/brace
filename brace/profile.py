@@ -29,7 +29,7 @@ group by 1 order by 1
 """
 
 DUPES = """
-select service_date::varchar as day, count(*) as duplicate_keys from (
+select service_date::varchar as day, count(*) as stops_visited_twice_in_trip from (
   select service_date, trip_id, stop_id, count(*) c from read_parquet(?)
   group by all having c > 1)
 group by 1 order by 1
@@ -61,11 +61,11 @@ def main():
 
     days = {r["day"]: r for r in rows(PER_DAY)}
     for r in rows(DUPES):
-        days[r["day"]]["duplicate_keys"] = r["duplicate_keys"]
+        days[r["day"]]["stops_visited_twice_in_trip"] = r["stops_visited_twice_in_trip"]
     for r in rows(DELAYS):
         days[r["day"]].update({k: v for k, v in r.items() if k != "day"})
     for d in days.values():
-        d.setdefault("duplicate_keys", 0)
+        d.setdefault("stops_visited_twice_in_trip", 0)
 
     out = {
         "run": run_info(),
@@ -76,7 +76,7 @@ def main():
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     Path(args.out).write_text(json.dumps(out, indent=1, default=str))
     for d in days.values():
-        print(d["day"], d["rows"], d["measured_dep_share"], d["duplicate_keys"], d.get("dep_delay_s_q01_q10_q50_q90_q99"))
+        print(d["day"], d["rows"], d["measured_dep_share"], d["stops_visited_twice_in_trip"], d.get("dep_delay_s_q01_q10_q50_q90_q99"))
 
 
 if __name__ == "__main__":
