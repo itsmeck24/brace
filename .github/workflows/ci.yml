@@ -1,0 +1,27 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
+      - run: uv sync --frozen
+      - name: unit and API tests
+        run: uv run pytest -q
+      - name: dbt models and data tests on the line-31 sample
+        env:
+          BRACE_DB: ci.duckdb
+        run: uv run dbt build --project-dir dbt --profiles-dir dbt --vars '{events_glob: "tests/fixtures/events/*/*.parquet"}'
+      - name: small evaluation on the sample (no network)
+        run: uv run python -m brace.evaluate --split dev --db ci.duckdb --out ci_results
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ci-eval
+          path: ci_results/
