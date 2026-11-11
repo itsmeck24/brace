@@ -18,19 +18,25 @@ def main():
     ap.add_argument("--db", default="data/brace.duckdb")
     ap.add_argument("--out", default="models/brace.joblib")
     ap.add_argument("--seed", type=int, default=0)
+    # defaults are the evaluated setup; the daily job passes a rolling window
+    ap.add_argument("--train-days", nargs=2, default=TRAIN_DAYS, metavar=("FIRST", "LAST"))
+    ap.add_argument("--val-days", nargs=2, default=VAL_DAYS, metavar=("FIRST", "LAST"))
     args = ap.parse_args()
 
+    info = run_info()
     df = load(args.db)
-    train, val = between(df, TRAIN_DAYS), between(df, VAL_DAYS)
+    train, val = between(df, args.train_days), between(df, args.val_days)
+    if train.empty or val.empty:
+        raise SystemExit(f"no rows for train {args.train_days} or val {args.val_days}")
     fitted = fit_quantile_model(train, seed=args.seed)
     q10, _, _ = predict_quantile_model(fitted, val)
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     joblib.dump({
         "fitted": fitted,
         "offsets": offsets(val, q10),
-        "train_days": TRAIN_DAYS,
-        "val_days": VAL_DAYS,
-        "run": run_info(),
+        "train_days": tuple(args.train_days),
+        "val_days": tuple(args.val_days),
+        "run": info,
     }, args.out)
     print("saved", args.out)
 

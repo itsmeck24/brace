@@ -85,6 +85,7 @@ def main():
         if dirty.strip():
             raise SystemExit("commit your code before the test run, so the results point at it")
 
+    info = run_info()  # at the start, so edits made while it runs can't change what it records
     df = load(args.db)
     train, val = between(df, TRAIN_DAYS), between(df, VAL_DAYS)
     evaluate_on = val if args.split == "dev" else between(df, TEST_DAYS)
@@ -124,7 +125,7 @@ def main():
     ).round(4).reset_index()
     summary.to_csv(out / f"{args.split}_summary.csv", index=False)
     meta = {
-        "run": run_info(),
+        "run": info,
         "split": args.split,
         "train_days": TRAIN_DAYS, "val_days": VAL_DAYS,
         "eval_days": VAL_DAYS if args.split == "dev" else TEST_DAYS,
