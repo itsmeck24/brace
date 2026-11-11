@@ -1,0 +1,80 @@
+{
+ "run": {
+  "command": "python -m brace.evaluate --split test --out results",
+  "commit": "15d6d5c",
+  "ran_at_utc": "2026-11-11T22:02:47+00:00",
+  "python": "3.13.1",
+  "packages": {
+   "duckdb": "2.0.0",
+   "scikit-learn": "1.9.1",
+   "numpy": "2.5.4"
+  },
+  "machine": "Darwin 27.0.0 arm64"
+ },
+ "split": "test",
+ "train_days": [
+  "2026-10-28",
+  "2026-11-04"
+ ],
+ "val_days": [
+  "2026-11-05",
+  "2026-11-06"
+ ],
+ "eval_days": [
+  "2026-11-07",
+  "2026-11-10"
+ ],
+ "rows": {
+  "train": 2877214,
+  "val": 775768,
+  "eval": 1343769
+ },
+ "target_missed_rate": 0.1,
+ "offsets_s_from_val": {
+  "schedule": {
+   "5": 6.0,
+   "10": 6.0,
+   "20": 6.0
+  },
+  "fixed_margin": {
+   "5": 1.0,
+   "10": 1.0,
+   "20": 1.0
+  },
+  "history_lookup": {
+   "5": -1.0,
+   "10": -1.0,
+   "20": -1.0
+  },
+  "carry_forward": {
+   "5": -1.0,
+   "10": -1.4499999999989086,
+   "20": -2.0
+  },
+  "quantile_model/seed0": {
+   "5": 0.025302275008369256,
+   "10": -0.48369283218854914,
+   "20": -0.5351139066391888
+  },
+  "quantile_model/seed1": {
+   "5": -0.12264063418045829,
+   "10": -0.6101622237293995,
+   "20": -0.5624445657758709
+  },
+  "quantile_model/seed2": {
+   "5": -0.18668728165774878,
+   "10": -0.30170837450232957,
+   "20": -0.4333552756049345
+  }
+ },
+ "seconds_per_method": {
+  "schedule": 0.5,
+  "fixed_margin": 0.5,
+  "history_lookup": 1.6,
+  "carry_forward": 2.3,
+  "quantile_model/seed0": 136.9,
+  "quantile_model/seed1": 128.7,
+  "quantile_model/seed2": 115.0
+ },
+ "data": "opentransportdata.swiss Ist-Daten v2, VBZ buses, built by dbt models in dbt/"
+}
