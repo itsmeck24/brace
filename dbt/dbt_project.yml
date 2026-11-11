@@ -12,3 +12,6 @@ vars:
 models:
   brace:
     +materialized: table
+
+flags:
+  send_anonymous_usage_stats: false
