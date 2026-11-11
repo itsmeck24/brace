@@ -6,12 +6,16 @@ dependencies = [
     "dbt-core>=1.10",
     "dbt-duckdb>=1.10",
     "duckdb>=2.0.0",
+    "fastapi>=0.162.4",
     "gtfs-realtime-bindings<3",
+    "httpx>=0.28.1",
+    "joblib>=1.6.0",
     "numpy>=2.5.4",
     "pandas>=3.1.1",
     "pyarrow>=26.0.1",
     "requests>=2.34.2",
     "scikit-learn>=1.9.1",
+    "uvicorn>=0.54.0",
 ]
 
 [dependency-groups]

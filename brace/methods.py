@@ -102,21 +102,31 @@ def _out_of_day_history(train):
     return out[:, 0], out[:, 1], out[:, 2]
 
 
-def quantile_model(train, rows, seed=0, max_train_rows=1_500_000):
+def fit_quantile_model(train, seed=0, max_train_rows=1_500_000):
+    table = history_table(train)  # from all training rows, used when predicting new rows
     if len(train) > max_train_rows:
         train = train.sample(max_train_rows, random_state=seed)
     routes = {r: i for i, r in enumerate(sorted(train["route"].unique()))}
     X_train = _features(train, _out_of_day_history(train), routes)
-    X_rows = _features(rows, history_lookup(train, rows), routes)
     cat = [FEATURES.index("route_code")]
-    preds = []
+    models = []
     for q in QS:
         m = HistGradientBoostingRegressor(loss="quantile", quantile=q, max_iter=300, learning_rate=0.1,
                                           categorical_features=cat, random_state=seed)
         m.fit(X_train, train["target_delay_s"])
-        preds.append(m.predict(X_rows))
-    lo, mid, hi = np.sort(np.column_stack(preds), axis=1).T  # quantiles can cross; keep them ordered
+        models.append(m)
+    return {"models": models, "routes": routes, "history": table}
+
+
+def predict_quantile_model(fitted, rows):
+    X = _features(rows, history_lookup(None, rows, fitted["history"]), fitted["routes"])
+    preds = np.column_stack([m.predict(X) for m in fitted["models"]])
+    lo, mid, hi = np.sort(preds, axis=1).T  # quantiles can cross; keep them ordered
     return lo, mid, hi
+
+
+def quantile_model(train, rows, seed=0):
+    return predict_quantile_model(fit_quantile_model(train, seed), rows)
 
 
 METHODS = {
