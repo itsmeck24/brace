@@ -1,4 +1,4 @@
-from check_feed import build_labels, seg_dist
+from brace.gtfs_rt_labels import build_labels, seg_dist
 
 
 def rep(ts, seq, status, lat=33.4, lon=-112.0):
