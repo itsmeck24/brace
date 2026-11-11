@@ -273,8 +273,12 @@ def prediction_preview(labels, preds):
             errs.append({"kind": lab["kind"], "horizon_min": horizon / 60, "err_s": t - mid, "width_s": lab["width_s"]})
     out = {}
     for name, lo, hi in (("1-5 min", 1, 5), ("5-10 min", 5, 10), ("10-20 min", 10, 20), ("20+ min", 20, 999)):
-        es = [abs(e["err_s"]) for e in errs if lo <= e["horizon_min"] < hi]
-        out[name] = summary([round(x) for x in es])
+        signed = [e["err_s"] for e in errs if lo <= e["horizon_min"] < hi]
+        out[name] = summary([round(abs(x)) for x in signed])
+        if signed:
+            # predicted minus actual > 0 means the bus came early, which is how you miss it
+            out[name]["share_bus_early_over_60s"] = round(sum(x > 60 for x in signed) / len(signed), 3)
+            out[name]["share_bus_late_over_60s"] = round(sum(x < -60 for x in signed) / len(signed), 3)
     return out
 
 
