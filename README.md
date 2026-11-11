@@ -86,8 +86,12 @@ morning service or other routes.
   Transitland lists it as CC-BY-4.0. [Transitland](https://www.transit.land/feeds/f-valleymetro~rt)
 - Static schedule: Open Data Commons Attribution, per the
   [dataset page](https://phoenixopendata.com/dataset/valley-metro-bus-schedule).
-- The portal's [Terms of Use](https://phoenixopendata.com/pages/terms-of-use) page sits behind a bot
-  check and has not been read yet. It has to be read before anything is published.
+- The portal's [Terms of Use](https://phoenixopendata.com/pages/terms-of-use) (read 2026-11-11)
+  allow use, reproduction and redistribution of the data. They also say the data comes as is, can
+  stop at any time, and may not be used with City of Phoenix trademarks. Users agree to indemnify the
+  City. They say nothing about polling rates or automated access.
+- This is an unofficial project. It is not endorsed by, sponsored by or affiliated with the City of
+  Phoenix or Valley Metro, and its views are not theirs.
 - Raw feed data is not committed. There is no free historical archive (Transitland's needs a
   subscription), so data has to be collected.
 - The collector polls every 30 s. No rate limit is published.
