@@ -59,15 +59,22 @@ has 25 buses there between 3 and 4 pm on routes 48, 62, 66 and the Orbit routes 
 Venus and Jupiter.
 
 1. Start `collect.py` about 10 minutes before arriving and keep it running until 10 minutes after.
-2. Stay 30 to 45 minutes. For each westbound bus, write `date,time,route,bus_number,stopped` to
-   `data/handcheck/observed.csv`. Time is the phone clock to the second when the doors open, or when
-   the front passes the pole if it doesn't stop. Route is as shown on the sign (48, MERC, EART, ...).
+2. Stay 30 to 45 minutes. For each westbound bus, write `date,route,bus_number,arrive,depart,stopped`
+   to `data/handcheck/observed.csv`. Times are the phone clock to the second: `arrive` when the bus
+   stops with doors open, `depart` when it starts moving again. If it passes without stopping, put
+   the moment the front passes the pole in `arrive` and leave `depart` empty. Route is as shown on
+   the sign (48, MERC, EART, ...).
 3. Run `check_feed.py` on that collection, then
-   `uv run python hand_check.py --obs data/handcheck/observed.csv --labels results/handcheck/labels.csv --stop 5324`.
+   `uv run python hand_check.py --obs data/handcheck/observed.csv --labels results/handcheck/labels.csv --raw data/handcheck/raw --stop 5324`.
 
 Pass bar, set before the visit: at least 10 matched arrivals, at least 80% of them inside their
 label window, and none more than 60 s outside. It is still unconfirmed whether the feed's vehicle id
 is the fleet number painted on the bus. Writing bus numbers down checks that.
+
+The departure times answer a second question. In the first 14 minutes of feed data, buses seemed
+to reach stops earlier than predicted surprisingly often, mostly at timepoint stops where early
+buses wait. If the feed's predicted time is really the departure time, the prediction should be
+closer to `depart` than to `arrive`. `hand_check.py` reports both.
 
 This covers one stop, one direction and one afternoon. It says nothing about long dwells, early
 morning service or other routes.
