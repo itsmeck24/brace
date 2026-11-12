@@ -124,6 +124,7 @@ CI runs the tests, the dbt build and a small evaluation on the sample, with no n
 
 ## Data and licenses
 
+- Code: MIT, see `LICENSE`.
 - Zurich bus data: [opentransportdata.swiss](https://opentransportdata.swiss), Ist-Daten v2. Free
   to use and publish with the source cited ([terms](https://opentransportdata.swiss/en/terms-of-use/)).
   The sample in `tests/fixtures` is a small extract of it.
