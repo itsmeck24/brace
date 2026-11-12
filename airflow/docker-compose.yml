@@ -1,0 +1,21 @@
+# Local Airflow for the daily job. From this folder:
+#   docker compose up -d --build
+# UI on localhost:8080. The admin password is printed in the container log.
+# The job writes to its own database (data/airflow.duckdb) and model
+# (models/brace_latest.joblib), so the evaluated ones are left alone.
+
+services:
+  airflow:
+    build:
+      context: ..
+      dockerfile: airflow/Dockerfile
+    command: standalone
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__CORE__DAGS_FOLDER: /opt/brace/airflow/dags
+      BRACE_BIN: /home/airflow/brace-venv/bin
+      BRACE_DB: data/airflow.duckdb
+    volumes:
+      - ..:/opt/brace
