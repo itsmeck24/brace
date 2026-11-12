@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BRACE evaluation</title>
+<meta name="description" content="Historical evaluation of BRACE on recorded Zurich bus days: waiting time against missed buses.">
+<style>
+:root {
+  color-scheme: light;
+  --page: #f9f9f7; --surface: #fcfcfb; --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781;
+  --grid: #e1e0d9; --axis: #c3c2b7; --ring: rgba(11,11,11,0.10); --good: #006300;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --wash: #2a78d61a;
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --axis: #383835; --ring: rgba(255,255,255,0.10); --good: #0ca30c;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --wash: #3987e51f;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
+  --grid: #2c2c2a; --axis: #383835; --ring: rgba(255,255,255,0.10); --good: #0ca30c;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --wash: #3987e51f;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--page); color: var(--ink);
+       font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 1040px; margin: 0 auto; padding: 32px 16px 64px; }
+h1 { font-size: 26px; margin: 0 0 4px; }
+h2 { font-size: 18px; margin: 0 0 4px; }
+p { margin: 0 0 12px; }
+.sub { color: var(--ink-2); }
+.muted { color: var(--muted); font-size: 13px; }
+section { background: var(--surface); border: 1px solid var(--ring); border-radius: 12px;
+          padding: 20px; margin-top: 20px; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin-top: 20px; }
+.tile { background: var(--surface); border: 1px solid var(--ring); border-radius: 12px; padding: 16px; }
+.tile .label { color: var(--ink-2); font-size: 13px; }
+.tile .value { font-size: 28px; font-weight: 600; margin: 2px 0; }
+.tile .delta { font-size: 13px; color: var(--ink-2); }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; align-items: center; }
+.seg { display: inline-flex; border: 1px solid var(--ring); border-radius: 8px; overflow: hidden; }
+.seg button { border: 0; background: transparent; color: var(--ink-2); padding: 6px 12px; font: inherit; font-size: 13px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--wash); color: var(--ink); font-weight: 600; }
+.legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: 13px; color: var(--ink-2); margin: 4px 0 8px; }
+.legend span::before { content: ""; display: inline-block; width: 14px; height: 2px; vertical-align: middle;
+                       margin-right: 6px; background: var(--c); border-radius: 1px; }
+.chart { position: relative; }
+svg { display: block; width: 100%; height: auto; overflow: visible; }
+svg text { fill: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.tip { position: absolute; pointer-events: none; background: var(--surface); border: 1px solid var(--ring);
+       border-radius: 8px; padding: 8px 10px; font-size: 13px; box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+       display: none; white-space: nowrap; z-index: 2; }
+.tip strong { font-weight: 600; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+th, td { text-align: right; padding: 6px 8px; border-bottom: 1px solid var(--grid); }
+th:first-child, td:first-child { text-align: left; }
+th { color: var(--ink-2); font-weight: 600; cursor: default; }
+th[data-sort] { cursor: pointer; }
+tr.dim td { color: var(--muted); }
+details { margin-top: 12px; }
+summary { cursor: pointer; color: var(--ink-2); font-size: 13px; }
+.scroll { overflow-x: auto; }
+.cases { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.case { border: 1px solid var(--ring); border-radius: 10px; padding: 14px; }
+.case td, .case th { padding: 5px 4px; }
+.case h3 { font-size: 15px; margin: 0 0 4px; }
+.badge { display: inline-block; font-size: 12px; padding: 1px 8px; border-radius: 99px; border: 1px solid var(--ring); color: var(--ink-2); }
+a { color: var(--s1); }
+.key { display: grid; gap: 2px; font-size: 13px; color: var(--ink-2); margin: 6px 0; }
+.key div { display: flex; align-items: center; gap: 8px; }
+.key i { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.key b { margin-left: auto; font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<main>
+  <h1>BRACE evaluation</h1>
+  <p class="sub">When should you be at the stop to catch your bus 9 times out of 10? Historical evaluation on
+    recorded Zurich city bus (VBZ) days. Every number here is what a rider <em>would have</em> experienced
+    on those days, computed from measured departures.</p>
+  <p class="muted" id="meta"></p>
+
+  <div class="tiles" id="tiles"></div>
+
+  <section>
+    <h2>Waiting time against missed buses</h2>
+    <p class="sub">Each method can aim for any miss rate: aim lower and you wait longer. The offset for each aim
+      was set on validation days, then measured on the test days. Lower and further left is better.
+      The dashed line is the 10% aim the project was built around.</p>
+    <div class="controls"><span class="muted">Deciding</span><div class="seg" id="h-trade"></div><span class="muted">before the scheduled departure</span></div>
+    <div class="legend" id="legend-trade"></div>
+    <div class="chart" id="trade"></div>
+    <p class="muted">The fixed margin gives the same curve as the shifted timetable once both are shifted, so it is not drawn.</p>
+    <details><summary>Table view</summary><div class="scroll" id="trade-table"></div></details>
+  </section>
+
+  <section>
+    <h2>Where it helps</h2>
+    <p class="sub">Seconds of waiting saved by the model compared with the history lookup, at the 10% aim.
+      Groups with fewer than 1,000 rows are greyed out.</p>
+    <div class="controls">
+      <div class="seg" id="dim"></div>
+      <div class="seg" id="h-break"></div>
+    </div>
+    <div class="chart" id="break"></div>
+    <details id="break-details"><summary>Table view</summary><div class="scroll" id="break-table"></div></details>
+  </section>
+
+  <section>
+    <h2>Later days</h2>
+    <p class="sub">Days after the test period, scored with the setup frozen before they were published:
+      same code, training days and offsets. Deciding 10 minutes ahead.</p>
+    <div class="scroll" id="forward"></div>
+  </section>
+
+  <section>
+    <h2>Two trips, replayed</h2>
+    <p class="sub">What BRACE knew 10 minutes before departure, what it said, and what happened. Picked at random
+      from test rows where the bus had already been measured at an earlier stop: one caught, one missed.</p>
+    <div class="cases" id="cases"></div>
+  </section>
+
+  <p class="muted" style="margin-top:24px">Data: <a href="https://opentransportdata.swiss">opentransportdata.swiss</a>,
+    Ist-Daten v2. Unofficial project, not affiliated with any transit agency.
+    Code and raw results: <a href="https://github.com/itsmeck24/brace">github.com/itsmeck24/brace</a>.</p>
+</main>
+<div class="tip" id="tip"></div>
+<script src="data.js"></script>
+<script>
+const D = window.BRACE;
+const COLORS = { quantile_model_s0: "--s1", history_lookup: "--s2", carry_forward: "--s3", schedule: "--s4" };
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const NS = "http://www.w3.org/2000/svg";
+const tip = document.getElementById("tip");
+
+function el(tag, attrs = {}, text) {
+  const e = tag.startsWith("svg:") ? document.createElementNS(NS, tag.slice(4)) : document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+const pct = v => (100 * v).toFixed(1) + "%";
+const sec = v => v.toFixed(1) + " s";
+const signed = v => (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(1);
+const hms = s => s.slice(11, 19);
+
+function showTip(evt, lines, host) {
+  tip.replaceChildren();
+  lines.forEach((l, i) => { const d = el("div"); if (i === 0) d.append(el("strong", {}, l)); else d.textContent = l; tip.append(d); });
+  tip.style.display = "block";
+  const r = tip.getBoundingClientRect();
+  let x = evt.pageX + 14, y = evt.pageY + 14;
+  if (x + r.width > window.scrollX + document.documentElement.clientWidth - 8) x = evt.pageX - r.width - 14;
+  tip.style.left = x + "px"; tip.style.top = y + "px";
+}
+const hideTip = () => { tip.style.display = "none"; };
+
+function segmented(host, options, value, onChange) {
+  host.replaceChildren();
+  for (const [v, label] of options) {
+    const b = el("button", { type: "button", "aria-pressed": String(v === value) }, label);
+    b.onclick = () => { [...host.children].forEach(c => c.setAttribute("aria-pressed", "false")); b.setAttribute("aria-pressed", "true"); onChange(v); };
+    host.append(b);
+  }
+}
+
+function table(host, head, rows, dimRow) {
+  const t = el("table"), thead = el("thead"), tr = el("tr");
+  head.forEach(h => tr.append(el("th", {}, h)));
+  thead.append(tr); t.append(thead);
+  const tb = el("tbody");
+  rows.forEach((r, i) => { const row = el("tr", dimRow && dimRow(i) ? { class: "dim" } : {}); r.forEach(c => row.append(el("td", {}, c))); tb.append(row); });
+  t.append(tb); host.replaceChildren(t);
+}
+
+// meta line and tiles
+const T = D.test;
+document.getElementById("meta").textContent =
+  `Test days ${T.days[0]} to ${T.days[T.days.length - 1]} (${T.rows.toLocaleString()} rider decisions). ` +
+  `Trained on ${T.train_days[0]} to ${T.train_days[1]}, offsets set on ${T.val_days[0]} to ${T.val_days[1]}. ` +
+  `Model run at commit ${T.commit}. Figures below use the served model (seed 0); intervals are 95% from resampling whole trips.`;
+
+const boot = (h, m, metric) => T.bootstrap.find(r => r.horizon_min === h && r.method === m && r.metric === metric);
+function tiles() {
+  const host = document.getElementById("tiles");
+  const w = boot(10, D.model, "mean_wait_s"), ms = boot(10, D.model, "missed_rate");
+  const vs = (m, label) => {
+    const b = boot(10, m, "mean_wait_s");
+    return [`Wait vs ${label}`, `${signed(b.model_minus_this)} s`,
+            `95% interval ${signed(b.diff_lo95)} to ${signed(b.diff_hi95)} s, from ${sec(b.value)}`];
+  };
+  const items = [
+    ["Average wait, deciding 10 min ahead", sec(w.value), `95% interval ${sec(w.lo95)} to ${sec(w.hi95)}`],
+    vs("schedule", "shifted timetable"),
+    vs("history_lookup", "history lookup"),
+    ["Buses missed", pct(ms.value), `aim was 10%; timetable ${pct(boot(10, "schedule", "missed_rate").value)}, history ${pct(boot(10, "history_lookup", "missed_rate").value)}`],
+  ];
+  host.replaceChildren(...items.map(([l, v, d]) => {
+    const t = el("div", { class: "tile" });
+    t.append(el("div", { class: "label" }, l), el("div", { class: "value" }, v), el("div", { class: "delta" }, d));
+    return t;
+  }));
+}
+
+// tradeoff chart
+function tradeChart(h) {
+  const host = document.getElementById("trade");
+  const W = 960, H = 380, m = { l: 56, r: 150, t: 12, b: 44 };
+  const rows = T.tradeoff.filter(r => r.horizon_min === h && D.shown.includes(r.method));
+  const xMax = 0.32, yMax = Math.ceil(Math.max(...rows.map(r => r.mean_wait_s)) / 50) * 50;
+  const x = v => m.l + (v / xMax) * (W - m.l - m.r), y = v => H - m.b - (v / yMax) * (H - m.t - m.b);
+  const svg = el("svg:svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "Waiting time against missed buses" });
+  for (let v = 0; v <= yMax; v += 50) {
+    svg.append(el("svg:line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), stroke: css("--grid") }));
+    svg.append(el("svg:text", { x: m.l - 8, y: y(v) + 4, "text-anchor": "end" }, v));
+  }
+  for (let v = 0; v <= 0.30001; v += 0.05) svg.append(el("svg:text", { x: x(v), y: H - m.b + 18, "text-anchor": "middle" }, Math.round(v * 100) + "%"));
+  svg.append(el("svg:line", { x1: m.l, x2: W - m.r, y1: y(0), y2: y(0), stroke: css("--axis") }));
+  svg.append(el("svg:line", { x1: x(0.10), x2: x(0.10), y1: m.t, y2: y(0), stroke: css("--axis"), "stroke-dasharray": "4 4" }));
+  svg.append(el("svg:text", { x: (m.l + W - m.r) / 2, y: H - 6, "text-anchor": "middle" }, "buses missed on the test days"));
+  svg.append(el("svg:text", { x: 14, y: (m.t + H - m.b) / 2, "text-anchor": "middle", transform: `rotate(-90 14 ${(m.t + H - m.b) / 2})` }, "average wait for a bus you catch (s)"));
+  const pts = [];
+  for (const meth of [...D.shown].reverse()) {
+    const r = rows.filter(v => v.method === meth).sort((a, b) => a.missed_rate - b.missed_rate);
+    const color = css(COLORS[meth]);
+    svg.append(el("svg:path", { d: r.map((p, i) => (i ? "L" : "M") + x(p.missed_rate) + " " + y(p.mean_wait_s)).join(" "),
+      fill: "none", stroke: color, "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }));
+    const op = r.find(p => Math.abs(p.target_miss - D.operating) < 1e-9);
+    if (op) svg.append(el("svg:circle", { cx: x(op.missed_rate), cy: y(op.mean_wait_s), r: 4.5, fill: color, stroke: css("--surface"), "stroke-width": 2 }));
+    const last = r[r.length - 1];
+    svg.append(el("svg:text", { x: W - m.r + 8, y: y(last.mean_wait_s) + 4, fill: css("--ink-2") }, D.names[meth]));
+    r.forEach(p => pts.push({ ...p, px: x(p.missed_rate), py: y(p.mean_wait_s) }));
+  }
+  // end labels can collide: keep the model's, drop others that land within 14px of it
+  const labels = [...svg.querySelectorAll("text")].filter(t => +t.getAttribute("x") === W - m.r + 8);
+  labels.sort((a, b) => +a.getAttribute("y") - +b.getAttribute("y"));
+  for (let i = 1; i < labels.length; i++) if (+labels[i].getAttribute("y") - +labels[i - 1].getAttribute("y") < 14) labels[i].setAttribute("y", +labels[i - 1].getAttribute("y") + 14);
+  const hit = el("svg:rect", { x: m.l, y: m.t, width: W - m.l - m.r, height: H - m.t - m.b, fill: "transparent" });
+  hit.addEventListener("pointermove", evt => {
+    const b = svg.getBoundingClientRect(), sx = (evt.clientX - b.left) * W / b.width, sy = (evt.clientY - b.top) * H / b.height;
+    let best = null, d = 1e9;
+    for (const p of pts) { const dd = (p.px - sx) ** 2 + (p.py - sy) ** 2; if (dd < d) { d = dd; best = p; } }
+    if (best && d < 900) showTip(evt, [D.names[best.method], `aim ${pct(best.target_miss)} missed`, `actually missed ${pct(best.missed_rate)}`, `average wait ${sec(best.mean_wait_s)}`], host);
+    else hideTip();
+  });
+  hit.addEventListener("pointerleave", hideTip);
+  svg.append(hit);
+  host.replaceChildren(svg);
+  const lg = document.getElementById("legend-trade");
+  lg.replaceChildren(...D.shown.map(mm => { const s = el("span", {}, D.names[mm]); s.style.setProperty("--c", css(COLORS[mm])); return s; }));
+  const aims = [...new Set(rows.map(r => r.target_miss))].sort((a, b) => a - b);
+  table(document.getElementById("trade-table"), ["Aim", ...D.shown.flatMap(mm => [D.names[mm] + " missed", "wait"])],
+    aims.map(a => [pct(a), ...D.shown.flatMap(mm => { const r = rows.find(v => v.method === mm && v.target_miss === a); return [pct(r.missed_rate), sec(r.mean_wait_s)]; })]));
+}
+
+// breakdown
+const DIMS = [["hour", "Hour of day"], ["freshness", "Last reading of the bus"], ["line", "Line"]];
+const ORDER = { freshness: ["none yet", "up to 2 min", "2 to 5 min", "older"] };
+function breakdown(rowsAll, dim, h, chartHost, tableHost) {
+  const rows = rowsAll.filter(r => r.dimension === dim && r.horizon_min === h);
+  const groups = [...new Set(rows.map(r => r.group))];
+  const get = (g, mm) => rows.find(r => r.group === g && r.method === mm);
+  let items = groups.map(g => {
+    const mo = get(g, D.model), hi = get(g, "history_lookup"), tt = get(g, "schedule");
+    return { g, n: mo.rows, small: mo.small_group, saved: hi.mean_wait_s - mo.mean_wait_s,
+             mw: mo.mean_wait_s, hw: hi.mean_wait_s, tw: tt.mean_wait_s, mm: mo.missed_rate, hm: hi.missed_rate, cov: mo.coverage80 };
+  });
+  if (ORDER[dim]) items.sort((a, b) => ORDER[dim].indexOf(a.g) - ORDER[dim].indexOf(b.g));
+  else if (dim === "line") items.sort((a, b) => (a.small - b.small) || (b.saved - a.saved));
+  else items.sort((a, b) => a.g.localeCompare(b.g));
+  if (chartHost) {
+    const shown = dim === "line" ? items.filter(i => !i.small) : items;
+    const bh = 22, gap = 8, W = 960, m = { l: dim === "line" ? 56 : 140, r: 80, t: 8, b: 28 };
+    const H = m.t + m.b + shown.length * (bh + gap);
+    const lo = Math.min(0, ...shown.map(i => i.saved)), hi = Math.max(1, ...shown.map(i => i.saved));
+    const x = v => m.l + (v - lo) / (hi - lo) * (W - m.l - m.r);
+    const svg = el("svg:svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "Seconds saved by group" });
+    const step = hi - lo > 60 ? 20 : 10;
+    for (let v = Math.ceil(lo / step) * step; v <= hi; v += step) {
+      svg.append(el("svg:line", { x1: x(v), x2: x(v), y1: m.t, y2: H - m.b, stroke: css(v === 0 ? "--axis" : "--grid") }));
+      svg.append(el("svg:text", { x: x(v), y: H - m.b + 16, "text-anchor": "middle" }, v + " s"));
+    }
+    shown.forEach((it, i) => {
+      const yy = m.t + i * (bh + gap), x0 = x(0), x1 = x(it.saved), w = Math.abs(x1 - x0);
+      const left = Math.min(x0, x1), rr = Math.min(4, w / 2);
+      const pos = it.saved >= 0;
+      const d = pos ? `M${left} ${yy} H${left + w - rr} Q${left + w} ${yy} ${left + w} ${yy + rr} V${yy + bh - rr} Q${left + w} ${yy + bh} ${left + w - rr} ${yy + bh} H${left} Z`
+                    : `M${left + w} ${yy} H${left + rr} Q${left} ${yy} ${left} ${yy + rr} V${yy + bh - rr} Q${left} ${yy + bh} ${left + rr} ${yy + bh} H${left + w} Z`;
+      const bar = el("svg:path", { d, fill: css("--s1"), opacity: it.small ? 0.35 : 1 });
+      const lines = [it.g, `${signed(it.saved)} s saved vs history`, `model ${sec(it.mw)}, history ${sec(it.hw)}, timetable ${sec(it.tw)}`,
+                     `missed: model ${pct(it.mm)}, history ${pct(it.hm)}`, `${it.n.toLocaleString()} rows`];
+      const hitbox = el("svg:rect", { x: m.l, y: yy - gap / 2, width: W - m.l - m.r, height: bh + gap, fill: "transparent" });
+      hitbox.addEventListener("pointermove", e => showTip(e, lines));
+      hitbox.addEventListener("pointerleave", hideTip);
+      svg.append(el("svg:text", { x: m.l - 8, y: yy + bh / 2 + 4, "text-anchor": "end", fill: css("--ink-2") }, it.g));
+      svg.append(bar);
+      svg.append(el("svg:text", { x: pos ? x1 + 6 : x1 - 6, y: yy + bh / 2 + 4, "text-anchor": pos ? "start" : "end", fill: css("--ink-2") }, signed(it.saved) + " s"));
+      svg.append(hitbox);
+    });
+    chartHost.replaceChildren(svg);
+  }
+  table(tableHost, [DIMS.find(d => d[0] === dim)[1], "Rows", "Saved vs history", "Model wait", "History wait", "Timetable wait", "Model missed", "History missed", "Model 80% range covered"],
+    items.map(i => [i.g, i.n.toLocaleString(), signed(i.saved) + " s", sec(i.mw), sec(i.hw), sec(i.tw), pct(i.mm), pct(i.hm), pct(i.cov)]),
+    k => items[k].small);
+}
+
+// forward days
+function forward() {
+  const host = document.getElementById("forward");
+  if (!D.forward.length) { host.textContent = "No later days scored yet."; return; }
+  const methods = [D.model, "history_lookup", "carry_forward", "schedule"];
+  const testRow = mm => { const b = boot(10, mm, "mean_wait_s"), c = boot(10, mm, "missed_rate"); return [c.value, b.value]; };
+  const head = ["Days", ...methods.flatMap(mm => [D.names[mm] + " missed", "wait"])];
+  const rows = [["Test days (mean)", ...methods.flatMap(mm => { const [a, b] = testRow(mm); return [pct(a), sec(b)]; })]];
+  for (const f of D.forward) {
+    const days = [...new Set(f.scores.map(r => r.day))].sort();
+    for (const day of days) {
+      rows.push([day, ...methods.flatMap(mm => {
+        const r = f.scores.find(s => s.day === day && s.horizon_min === 10 && (mm === D.model ? s.method === "quantile_model" && s.seed === 0 : s.method === mm));
+        return [pct(r.missed_rate), sec(r.mean_wait_s)];
+      })]);
+    }
+  }
+  table(host, head, rows);
+}
+
+// replay cases
+function cases() {
+  const host = document.getElementById("cases");
+  host.replaceChildren(...D.replay.map(c => {
+    const box = el("div", { class: "case" });
+    box.append(el("h3", {}, `Line ${c.route}, ${c.stop}`));
+    box.append(el("span", { class: "badge" }, c.kind === "caught" ? "caught" : "missed"));
+    box.append(el("p", { class: "muted" }, `${c.day}, scheduled ${hms(c.scheduled)}, decided at ${hms(c.decision)}`));
+    const t0 = new Date(c.decision.replace(" ", "T")), times = [c.scheduled, c.actual, c.be_there_by, c.timetable_be_there_by, ...c.range80].map(s => new Date(s.replace(" ", "T")));
+    const lo = Math.min(t0, ...times) - 30e3, hi = Math.max(...times) + 30e3;
+    const W = 460, H = 36, x = t => 12 + (t - lo) / (hi - lo) * (W - 24);
+    const svg = el("svg:svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "Timeline of this departure" });
+    const [r0, r1] = c.range80.map(s => x(new Date(s.replace(" ", "T"))));
+    svg.append(el("svg:rect", { x: r0, y: 10, width: Math.max(2, r1 - r0), height: 16, rx: 4, fill: css("--wash") }));
+    svg.append(el("svg:line", { x1: 12, x2: W - 12, y1: 18, y2: 18, stroke: css("--axis") }));
+    const marks = [
+      [c.decision, "Decided", "--muted"], [c.timetable_be_there_by, "Timetable, shifted, says be there by", "--s4"],
+      [c.be_there_by, "BRACE says be there by", "--s1"], [c.actual, "Bus actually left", "--ink"],
+    ];
+    const key = el("div", { class: "key" });
+    for (const [s, label, col] of marks) {
+      svg.append(el("svg:circle", { cx: x(new Date(s.replace(" ", "T"))), cy: 18, r: 5, fill: css(col), stroke: css("--surface"), "stroke-width": 2 }));
+      const row = el("div");
+      const dot = el("i"); dot.style.background = css(col);
+      row.append(dot, el("span", {}, label), el("b", {}, hms(s)));
+      key.append(row);
+    }
+    box.append(svg, key);
+    box.append(el("p", { class: "muted" }, `Shaded: the model's 80% range, ${hms(c.range80[0])} to ${hms(c.range80[1])}.`));
+    const tb = el("div", { class: "scroll" });
+    const mss = v => (v < 0 ? "\u2212" : "+") + Math.floor(Math.abs(v) / 60) + ":" + String(Math.round(Math.abs(v) % 60)).padStart(2, "0");
+    table(tb, ["Earlier stop", "Left", "Late", "Known"],
+      c.earlier_stops.map(s => [s.stop.replace(/^Zürich, /, ""), hms(s.actual), mss(s.delay_s), s.known ? "yes" : "no"]),
+      i => !c.earlier_stops[i].known);
+    box.append(tb);
+    box.append(el("p", { class: "muted" }, "Rows marked no had not happened at decision time, so BRACE could not use them."));
+    return box;
+  }));
+}
+
+let hTrade = 10, dim = "hour", hBreak = 10;
+const H_OPTS = [[5, "5 min"], [10, "10 min"], [20, "20 min"]];
+const drawBreak = () => breakdown(T.breakdown, dim, hBreak, document.getElementById("break"), document.getElementById("break-table"));
+function render() {
+  tiles(); tradeChart(hTrade); drawBreak(); forward(); cases();
+}
+segmented(document.getElementById("h-trade"), H_OPTS, hTrade, v => { hTrade = v; tradeChart(v); });
+segmented(document.getElementById("dim"), DIMS, dim, v => { dim = v; drawBreak(); });
+segmented(document.getElementById("h-break"), H_OPTS, hBreak, v => { hBreak = v; drawBreak(); });
+render();
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", render);
+</script>
+</body>
+</html>
