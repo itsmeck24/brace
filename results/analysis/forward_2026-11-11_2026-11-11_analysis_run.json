@@ -1,7 +1,7 @@
 {
  "run": {
   "command": "python -m brace.analyze --label forward_2026-11-11_2026-11-11",
-  "commit": "9c5c4de",
+  "commit": "b565ea7",
   "ran_at_utc": "2026-11-12T05:40:18+00:00",
   "python": "3.13.1",
   "packages": {

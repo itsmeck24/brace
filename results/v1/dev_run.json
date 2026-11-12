@@ -1,7 +1,7 @@
 {
  "run": {
   "command": "python -m brace.evaluate --split dev --out results",
-  "commit": "15d6d5c",
+  "commit": "dc99a1b",
   "ran_at_utc": "2026-11-11T21:56:16+00:00",
   "python": "3.13.1",
   "packages": {

@@ -1,7 +1,7 @@
 {
  "run": {
   "command": "python -m brace.profile --events data/events/ch_vbz --out results/data_profile_ch_vbz.json --source opentransportdata.swiss Ist-Daten v2, VBZ buses, 2026-10-28 to 2026-11-10",
-  "commit": "2774725",
+  "commit": "acb07fc",
   "ran_at_utc": "2026-11-11T21:48:57+00:00",
   "python": "3.13.1",
   "packages": {

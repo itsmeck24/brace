@@ -1,7 +1,7 @@
 {
  "run": {
   "command": "python -m brace.profile --events data/events/us_valleymetro --out results/data_profile_us_valleymetro.json --source Valley Metro GTFS-Realtime via Phoenix Open Data, collected 2026-11-11 13:40-14:32 MST, arrivals inferred as windows",
-  "commit": "2774725",
+  "commit": "acb07fc",
   "ran_at_utc": "2026-11-11T21:48:57+00:00",
   "python": "3.13.1",
   "packages": {
