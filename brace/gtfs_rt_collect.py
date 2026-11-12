@@ -2,7 +2,7 @@
 # protobuf, plus one log line per fetch. Only the header gets parsed, so raw
 # data is kept even if parsing breaks later.
 #
-# usage: VM_API_KEY=... uv run python collect.py --minutes 60 --every 30
+# usage: VM_API_KEY=... uv run python -m brace.gtfs_rt_collect --minutes 60 --every 30
 
 import argparse
 import gzip

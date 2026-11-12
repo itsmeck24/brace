@@ -1,6 +1,6 @@
-# Reads what collect.py saved: feed freshness, field coverage, arrival labels.
+# Reads what gtfs_rt_collect.py saved: feed freshness, field coverage, arrival labels.
 #
-# usage: uv run python check_feed.py --raw data/raw --gtfs data/static/gtfs --out results/feed_check
+# usage: uv run python -m brace.gtfs_rt_labels --raw data/raw --gtfs data/static/gtfs --out results/feed_check
 
 import argparse
 import csv
