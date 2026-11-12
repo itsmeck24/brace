@@ -152,15 +152,3 @@ CI runs the tests, the dbt build and a small evaluation on the sample, with no n
   (CC BY / ODC-BY). Not included in this repo.
 - This is an unofficial project, not endorsed by or affiliated with any transit agency or city.
 
-## Scope
-
-Results are what a rider would have experienced on recorded days; the API replays those days and
-does not read a live feed yet. One operator, 15 days of autumn data. The Phoenix adapter runs
-through the same pipeline and tests, but that feed has no measured departures to score against.
-
-## Roadmap
-
-- Per-line offsets, so 9 in 10 holds for each line and not only overall.
-- Live mode from the Swiss realtime feed, with schedule-only, history and live answers kept apart.
-- Score each new day automatically in the Airflow job, against the frozen setup.
-- More operators through the same adapter.
