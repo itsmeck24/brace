@@ -89,6 +89,21 @@ Then:
 curl 'localhost:8000/plan?route=31&stop_id=853081211&sched_dep=2026-11-09T17:08&minutes_before=10'
 ```
 
+With Docker, after the steps above have built `data/brace.duckdb` and `models/brace.joblib`:
+
+```
+docker build -t brace .
+docker run -p 8000:8000 -v "$PWD/data:/app/data:ro" -v "$PWD/models:/app/models:ro" brace
+```
+
+Daily refresh with Airflow 3 (`airflow/`): fetch yesterday's file, run the dbt build and its tests,
+profile the data, and retrain on a rolling window (8 days to train, the last 2 to set offsets).
+It writes to `data/airflow.duckdb` and `models/brace_latest.joblib`, not to the evaluated ones.
+
+```
+cd airflow && docker compose up -d --build     # UI on localhost:8080
+```
+
 Small version with no download, using the line 31 sample committed in `tests/fixtures`:
 
 ```
