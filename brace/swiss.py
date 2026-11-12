@@ -29,7 +29,20 @@ def list_files(session):
 
 # Swiss columns -> common stop-event columns. Scheduled times are minute
 # precision, actual/forecast times have seconds. All local Zurich time.
+#
+# Two things the raw files do that this has to handle:
+# - some trips are listed twice, line for line. Exact copies are dropped.
+# - stops a minute apart share a scheduled time, so time alone can't order them.
+#   Ties are broken by the order of lines in the file, which follows the route.
 TRANSFORM = """
+with src as (
+  select *, row_number() over () as src_line
+  from read_csv(?, delim=';', header=true, all_varchar=true)
+  where BETREIBER_ABK = ? and upper(PRODUKT_ID) = 'BUS'
+),
+src_unique as (
+  select * exclude (src_line), min(src_line) as src_line from src group by all
+)
 select
   'ch:' || BETREIBER_ABK                                   as agency,
   strptime(BETRIEBSTAG, '%d.%m.%Y')::date                  as service_date,
@@ -39,7 +52,7 @@ select
   HALTESTELLEN_NAME                                        as stop_name,
   row_number() over (partition by FAHRT_BEZEICHNER
                      order by coalesce(strptime(ANKUNFTSZEIT, '%d.%m.%Y %H:%M'),
-                                       strptime(ABFAHRTSZEIT, '%d.%m.%Y %H:%M')))
+                                       strptime(ABFAHRTSZEIT, '%d.%m.%Y %H:%M')), src_line)
                                                            as stop_seq,
   strptime(ANKUNFTSZEIT, '%d.%m.%Y %H:%M')                 as sched_arr,
   strptime(ABFAHRTSZEIT, '%d.%m.%Y %H:%M')                 as sched_dep,
@@ -50,17 +63,29 @@ select
   FAELLT_AUS_TF = 'true'                                   as cancelled,
   ZUSATZFAHRT_TF = 'true'                                  as extra_trip,
   DURCHFAHRT_TF = 'true'                                   as pass_through
-from read_csv(?, delim=';', header=true, all_varchar=true)
-where BETREIBER_ABK = ? and upper(PRODUKT_ID) = 'BUS'
+from src_unique
 """
+
+REQUIRED = ["BETRIEBSTAG", "FAHRT_BEZEICHNER", "BETREIBER_ABK", "PRODUKT_ID", "LINIEN_TEXT", "BPUIC",
+            "HALTESTELLEN_NAME", "ANKUNFTSZEIT", "AN_PROGNOSE", "AN_PROGNOSE_STATUS", "ABFAHRTSZEIT",
+            "AB_PROGNOSE", "AB_PROGNOSE_STATUS", "FAELLT_AUS_TF", "ZUSATZFAHRT_TF", "DURCHFAHRT_TF"]
 
 
 def convert(csv_path, out_path, operator):
+    # writes the whole day or nothing: a failed run leaves the previous file in place
     con = duckdb.connect()
+    cols = [r[0] for r in con.execute(
+        "describe select * from read_csv(?, delim=';', header=true, all_varchar=true)", [str(csv_path)]).fetchall()]
+    missing = [c for c in REQUIRED if c not in cols]
+    if missing:
+        raise ValueError(f"{csv_path}: source file is missing columns {missing}")
     rel = con.sql(TRANSFORM, params=[str(csv_path), operator])
     tmp = out_path.with_suffix(".tmp")
     rel.write_parquet(str(tmp))
     n = con.execute("select count(*) from read_parquet(?)", [str(tmp)]).fetchone()[0]
+    if n == 0:
+        tmp.unlink()
+        raise ValueError(f"{csv_path}: no {operator} bus rows")
     tmp.rename(out_path)  # only a finished file gets the real name
     return n
 
@@ -79,6 +104,7 @@ def main():
     ap.add_argument("--end", required=True)
     ap.add_argument("--operator", default="VBZ")
     ap.add_argument("--out", default="data/events")
+    ap.add_argument("--replace", action="store_true", help="fetch again even if the day exists (corrected files)")
     args = ap.parse_args()
 
     out = Path(args.out) / f"ch_{args.operator.lower()}"
@@ -90,7 +116,7 @@ def main():
     d, end = date.fromisoformat(args.start), date.fromisoformat(args.end)
     while d <= end:
         target = out / f"{d}.parquet"
-        if target.exists():
+        if target.exists() and not args.replace:
             print(d, "already there")
         elif str(d) not in files:
             print(d, "not on the dataset page", file=sys.stderr)

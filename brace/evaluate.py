@@ -29,7 +29,8 @@ SEEDS = (0, 1, 2)
 
 def load(db):
     con = duckdb.connect(db, read_only=True)
-    df = con.execute("select * from training_rows").df()
+    # fixed order: the model trains on a sample of rows, and the sample depends on order
+    df = con.execute("select * from training_rows order by agency, service_date, trip_id, stop_seq, horizon_min").df()
     df["service_date"] = pd.to_datetime(df["service_date"]).dt.date
     return df
 

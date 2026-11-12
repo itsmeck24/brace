@@ -39,12 +39,19 @@ own_trip as (
 ),
 
 -- how late the previous bus of the same line was at this same stop
+-- two buses can leave a stop in the same second; keep one, always the same one,
+-- so the as-of join below gives the same answer on every build
+dep_at_stop as (
+    select * from dep
+    qualify row_number() over (partition by agency, service_date, route, stop_id, actual_dep order by trip_id) = 1
+),
+
 same_stop as (
     select l.agency, l.service_date, l.trip_id, l.stop_seq, l.horizon_min,
            e.dep_delay_s as prev_bus_delay_s,
            epoch(l.decision_time - e.actual_dep) as prev_bus_age_s
     from live l
-    asof left join dep e
+    asof left join dep_at_stop e
       on l.agency = e.agency and l.service_date = e.service_date
      and l.route = e.route and l.stop_id = e.stop_id
      and l.decision_time >= e.actual_dep
