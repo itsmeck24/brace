@@ -19,7 +19,8 @@ def client(tmp_path_factory):
     env = {**os.environ, "BRACE_DB": db}
     subprocess.run(["dbt", "build", "--project-dir", "dbt", "--profiles-dir", "dbt", "--quiet",
                     "--vars", '{events_glob: "tests/fixtures/events/*/*.parquet"}'], cwd=ROOT, env=env, check=True)
-    subprocess.run(["python", "-m", "brace.train", "--db", db, "--out", model_path], cwd=ROOT, check=True)
+    subprocess.run(["python", "-m", "brace.train", "--db", db, "--out", model_path,
+                    "--train-days", "2026-10-28", "2026-10-29", "--val-days", "2026-11-05", "2026-11-05"], cwd=ROOT, check=True)
     os.environ["BRACE_DB"], os.environ["BRACE_MODEL"] = db, model_path
     from brace import api
     api.model.cache_clear()

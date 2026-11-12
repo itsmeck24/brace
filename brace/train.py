@@ -8,7 +8,7 @@ from pathlib import Path
 
 import joblib
 
-from brace.evaluate import TRAIN_DAYS, VAL_DAYS, between, load, offsets
+from brace.evaluate import TRAIN_DAYS, VAL_DAYS, between, load, offsets, require_days
 from brace.methods import fit_quantile_model, predict_quantile_model
 from brace.runinfo import run_info
 
@@ -26,8 +26,8 @@ def main():
     info = run_info()
     df = load(args.db)
     train, val = between(df, args.train_days), between(df, args.val_days)
-    if train.empty or val.empty:
-        raise SystemExit(f"no rows for train {args.train_days} or val {args.val_days}")
+    require_days(train, args.train_days, "train")
+    require_days(val, args.val_days, "validation")
     fitted = fit_quantile_model(train, seed=args.seed)
     q10, _, _ = predict_quantile_model(fitted, val)
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)

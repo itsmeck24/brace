@@ -108,7 +108,8 @@ Small version with no download, using the line 31 sample committed in `tests/fix
 
 ```
 BRACE_DB=sample.duckdb uv run dbt build --project-dir dbt --profiles-dir dbt --vars '{events_glob: "tests/fixtures/events/*/*.parquet"}'
-uv run python -m brace.evaluate --split dev --db sample.duckdb --out sample_results
+uv run python -m brace.evaluate --split dev --db sample.duckdb --out sample_results \
+    --train-days 2026-10-28 2026-10-29 --val-days 2026-11-05 2026-11-05
 ```
 
 ## Tests

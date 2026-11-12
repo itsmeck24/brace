@@ -21,7 +21,7 @@ jobs:
         run: |
           uv run dbt build --project-dir dbt --profiles-dir dbt --vars '{events_glob: "tests/fixtures/events/*/*.parquet"}'
       - name: small evaluation on the sample (no network)
-        run: uv run python -m brace.evaluate --split dev --db ci.duckdb --out ci_results
+        run: uv run python -m brace.evaluate --split dev --db ci.duckdb --out ci_results --train-days 2026-10-28 2026-10-29 --val-days 2026-11-05 2026-11-05
       - uses: actions/upload-artifact@v4
         with:
           name: ci-eval
