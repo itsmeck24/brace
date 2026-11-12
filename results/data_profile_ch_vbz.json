@@ -1,0 +1,318 @@
+{
+ "run": {
+  "command": "python -m brace.profile --events data/events/ch_vbz --out results/data_profile_ch_vbz.json --source opentransportdata.swiss Ist-Daten v2, VBZ buses",
+  "commit": "9c5c4de",
+  "ran_at_utc": "2026-11-12T05:28:04+00:00",
+  "python": "3.13.1",
+  "packages": {
+   "duckdb": "2.0.0",
+   "scikit-learn": "1.9.1",
+   "numpy": "2.5.4"
+  },
+  "machine": "Darwin 27.0.0 arm64"
+ },
+ "events": "data/events/ch_vbz",
+ "source": "opentransportdata.swiss Ist-Daten v2, VBZ buses",
+ "days": [
+  {
+   "day": "2026-10-28",
+   "rows": 140977,
+   "trips": 8350,
+   "routes": 59,
+   "stops": 1132,
+   "cancelled_share": 0.0232,
+   "measured_dep": 127045,
+   "measured_dep_share": 0.981,
+   "measured_arr_share": 0.9832,
+   "stops_visited_twice_in_trip": 9,
+   "dep_delay_s_q01_q10_q50_q90_q99": [
+    -36.0,
+    7.0,
+    75.0,
+    234.0,
+    548.0
+   ],
+   "share_left_30s_early": 0.014
+  },
+  {
+   "day": "2026-10-29",
+   "rows": 140351,
+   "trips": 8330,
+   "routes": 59,
+   "stops": 1135,
+   "cancelled_share": 0.015,
+   "measured_dep": 128210,
+   "measured_dep_share": 0.986,
+   "measured_arr_share": 0.9887,
+   "stops_visited_twice_in_trip": 10,
+   "dep_delay_s_q01_q10_q50_q90_q99": [
+    -36.0,
+    5.0,
+    75.0,
+    242.0,
+    545.0
+   ],
+   "share_left_30s_early": 0.0144
+  },
+  {
+   "day": "2026-10-30",
+   "rows": 149955,
+   "trips": 8811,
+   "routes": 86,
+   "stops": 1443,
+   "cancelled_share": 0.0399,
+   "measured_dep": 129317,
+   "measured_dep_share": 0.9546,
+   "measured_arr_share": 0.9571,
+   "dep_delay_s_q01_q10_q50_q90_q99": [
+    -35.0,
+    6.0,
+    76.0,
+    238.0,
+    547.0
+   ],
+   "share_left_30s_early": 0.0137,
+   "stops_visited_twice_in_trip": 0
+  },
+  {
+   "day": "2026-10-31",
+   "rows": 119944,
+   "trips": 6858,
+   "routes": 81,
+   "stops": 1427,
+   "cancelled_share": 0.0216,
+   "measured_dep": 106075,
+   "measured_dep_share": 0.9587,
+   "measured_arr_share": 0.9619,
+   "dep_delay_s_q01_q10_q50_q90_q99": [
+    -34.0,
+    7.0,
+    75.0,
+    218.0,
+    473.0
+   ],
+   "share_left_30s_early": 0.0129,
+   "stops_visited_twice_in_trip": 0
+  },
+  {
+   "day": "2026-11-01",
+   "rows": 96084,
+   "trips": 5506,
+   "routes": 48,
+   "stops": 1085,
+   "cancelled_share": 0.0048,
+   "measured_dep": 89114,
+   "measured_dep_share": 0.9886,
+   "measured_arr_share": 0.9943,
+   "dep_delay_s_q01_q10_q50_q90_q99": [
+    -40.0,
+    -1.0,
+    56.0,
+    160.0,
+    345.0
+   ],
+   "share_left_30s_early": 0.0201,
+   "stops_visited_twice_in_trip": 0
+  },
+  {
+   "day": "2026-11-02",
+   "rows": 139113,
+   "trips": 8354,
+   "routes": 59,
+   "stops": 1125,
+   "cancelled_share": 0.0115,
+   "measured_dep": 127010,
+   "measured_dep_share": 0.9826,
+   "measured_arr_share": 0.9855,
+   "dep_delay_s_q01_q10_q50_q90_q99": [
+    -37.0,
+    3.0,
+    65.0,
+    196.0,
+    432.0
+   ],
+   "share_left_30s_early": 0.0158,
+   "stops_visited_twice_in_trip": 0
+  },
+  {
+   "day": "2026-11-03",
+   "rows": 139398,
+   "trips": 8394,
+   "routes": 60,
+   "stops": 1151,
+   "cancelled_share": 0.0164,
+   "measured_dep": 124628,
+   "measured_dep_share": 0.9672,
+   "measured_arr_share": 0.971,
+   "stops_visited_twice_in_trip": 19,
+   "dep_delay_s_q01_q10_q50_q90_q99": [
+    -35.0,
+    7.0,
+    75.0,
+    227.0,
+    547.0
+   ],
+   "share_left_30s_early": 0.0135
+  },
+  {
+   "day": "2026-11-04",
+   "rows": 140570,
+   "trips": 8441,
+   "routes": 60,
+   "stops": 1138,
+   "cancelled_share": 0.0176,
+   "measured_dep": 127283,
+   "measured_dep_share": 0.9807,
+   "measured_arr_share": 0.9832,
+   "stops_visited_twice_in_trip": 1,
+   "dep_delay_s_q01_q10_q50_q90_q99": [
+    -36.0,
+    6.0,
+    74.0,
+    239.0,
+    592.0
+   ],
+   "share_left_30s_early": 0.0143
+  },
+  {
+   "day": "2026-11-05",
+   "rows": 140037,
+   "trips": 8414,
+   "routes": 60,
+   "stops": 1137,
+   "cancelled_share": 0.0133,
+   "measured_dep": 127590,
+   "measured_dep_share": 0.9825,
+   "measured_arr_share": 0.9852,
+   "dep_delay_s_q01_q10_q50_q90_q99": [
+    -38.0,
+    4.0,
+    70.0,
+    211.0,
+    467.0
+   ],
+   "share_left_30s_early": 0.016,
+   "stops_visited_twice_in_trip": 0
+  },
+  {
+   "day": "2026-11-06",
+   "rows": 147618,
+   "trips": 8779,
+   "routes": 87,
+   "stops": 1452,
+   "cancelled_share": 0.0219,
+   "measured_dep": 131027,
+   "measured_dep_share": 0.9649,
+   "measured_arr_share": 0.9667,
+   "dep_delay_s_q01_q10_q50_q90_q99": [
+    -33.0,
+    9.0,
+    81.0,
+    275.0,
+    766.0
+   ],
+   "share_left_30s_early": 0.0115,
+   "stops_visited_twice_in_trip": 0
+  },
+  {
+   "day": "2026-11-07",
+   "rows": 119047,
+   "trips": 6849,
+   "routes": 82,
+   "stops": 1437,
+   "cancelled_share": 0.0083,
+   "measured_dep": 107298,
+   "measured_dep_share": 0.9644,
+   "measured_arr_share": 0.967,
+   "dep_delay_s_q01_q10_q50_q90_q99": [
+    -30.0,
+    9.0,
+    74.0,
+    220.0,
+    560.0
+   ],
+   "share_left_30s_early": 0.01,
+   "stops_visited_twice_in_trip": 0
+  },
+  {
+   "day": "2026-11-08",
+   "rows": 95342,
+   "trips": 5538,
+   "routes": 49,
+   "stops": 1096,
+   "cancelled_share": 0.0064,
+   "measured_dep": 88150,
+   "measured_dep_share": 0.988,
+   "measured_arr_share": 0.9927,
+   "dep_delay_s_q01_q10_q50_q90_q99": [
+    -39.0,
+    3.0,
+    62.0,
+    189.0,
+    516.5099999999948
+   ],
+   "share_left_30s_early": 0.0177,
+   "stops_visited_twice_in_trip": 0
+  },
+  {
+   "day": "2026-11-09",
+   "rows": 139654,
+   "trips": 8378,
+   "routes": 60,
+   "stops": 1142,
+   "cancelled_share": 0.0289,
+   "measured_dep": 125278,
+   "measured_dep_share": 0.9829,
+   "measured_arr_share": 0.9849,
+   "dep_delay_s_q01_q10_q50_q90_q99": [
+    -35.0,
+    7.0,
+    73.0,
+    234.0,
+    605.0
+   ],
+   "share_left_30s_early": 0.0136,
+   "stops_visited_twice_in_trip": 0
+  },
+  {
+   "day": "2026-11-10",
+   "rows": 140112,
+   "trips": 8406,
+   "routes": 60,
+   "stops": 1142,
+   "cancelled_share": 0.0183,
+   "measured_dep": 127135,
+   "measured_dep_share": 0.9833,
+   "measured_arr_share": 0.9853,
+   "stops_visited_twice_in_trip": 1,
+   "dep_delay_s_q01_q10_q50_q90_q99": [
+    -33.0,
+    8.0,
+    78.0,
+    251.0,
+    641.0
+   ],
+   "share_left_30s_early": 0.012
+  },
+  {
+   "day": "2026-11-11",
+   "rows": 138784,
+   "trips": 8351,
+   "routes": 59,
+   "stops": 1132,
+   "cancelled_share": 0.0304,
+   "measured_dep": 123510,
+   "measured_dep_share": 0.9768,
+   "measured_arr_share": 0.9791,
+   "dep_delay_s_q01_q10_q50_q90_q99": [
+    -34.0,
+    9.0,
+    83.0,
+    293.0,
+    940.9100000000035
+   ],
+   "share_left_30s_early": 0.0131,
+   "stops_visited_twice_in_trip": 0
+  }
+ ]
+}

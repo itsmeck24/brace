@@ -1,0 +1,30 @@
+{
+ "run": {
+  "command": "python -m brace.analyze --label test",
+  "commit": "9c5c4de",
+  "ran_at_utc": "2026-11-12T05:40:05+00:00",
+  "python": "3.13.1",
+  "packages": {
+   "duckdb": "2.0.0",
+   "scikit-learn": "1.9.1",
+   "numpy": "2.5.4"
+  },
+  "machine": "Darwin 27.0.0 arm64"
+ },
+ "label": "test",
+ "eval_days": [
+  "2026-11-07",
+  "2026-11-08",
+  "2026-11-09",
+  "2026-11-10"
+ ],
+ "eval_rows": 1343487,
+ "model_seed": 0,
+ "operating_target_miss": 0.1,
+ "bootstrap": {
+  "resamples": 1000,
+  "unit": "trip, within day",
+  "rng_seed": 0
+ },
+ "small_group_rows": 1000
+}
